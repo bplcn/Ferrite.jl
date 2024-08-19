@@ -4,15 +4,16 @@
 struct TriangulationRule{T, rdim} <: Ferrite.AbstractQuadratureRule
     sub_nodes::Vector{Vec{rdim, T}}
     triangles::Matrix{Int}
+    edge::Vector{Int} # sub_nodes ids on the edge
     dummy_weights::Vector{T} # TODO: Change to no-cost iterable with single NaN value (existing type somewhere?)
-    function TriangulationRule{T, rdim}(sub_nodes::Vector{Vec{rdim, T}}, triangles::Vector{NTuple{3, Int}}) where {T, rdim}
+    function TriangulationRule{T, rdim}(sub_nodes::Vector{Vec{rdim, T}}, triangles::Matrix{Int}, edge::Vector{Int}) where {T, rdim}
         dummy_weights = [T(NaN) for _ in 1:length(sub_nodes)]
-        return new{T, rdim}(sub_nodes, triangles, dummy_weights)
+        return new{T, rdim}(sub_nodes, triangles, edge, dummy_weights)
     end
 end
 # Convert data type
-function TriangulationRule{Tb}(sub_nodes::Vector{<:Vec{rdim}}, triangles::Vector{NTuple{3, Int}}) where {Tb, rdim}
-    return TriangulationRule{Tb, rdim}(map(ξn -> convert(Vec{rdim, Tb}, ξn), sub_nodes), triangles)
+function TriangulationRule{Tb}(sub_nodes::Vector{<:Vec{rdim}}, triangles::Matrix{Int}, edges::Vector{Int}) where {Tb, rdim}
+    return TriangulationRule{Tb, rdim}(map(ξn -> convert(Vec{rdim, Tb}, ξn), sub_nodes), triangles, edges)
 end
 
 Ferrite.getweights(tr::TriangulationRule) = tr.dummy_weights
@@ -50,6 +51,11 @@ function TriangulationRule{Tb}(::Type{RefQuadrilateral}, refinement_levels::Int)
             end
         end
     end
+    edge = Vector{Int}(undef, 4 * (n - 1))
+    edge[1:n] .= 1:n
+    edge[n:(2n-1)] .= n:(n + refinement_levels):n_nodes
+    edge[(2n-1):(3n-2)] .= n_nodes:-1:(n_nodes-n+1)
+    edge[(3n-2):(4n-4)] .= (n_nodes-1+1):(-(n + refinement_levels)):2 # 2 instead of 1 to skip last
 
     triangles = Matrix{Int}(undef, 3, n_cells)
     offset = 0
@@ -65,7 +71,7 @@ function TriangulationRule{Tb}(::Type{RefQuadrilateral}, refinement_levels::Int)
             offset += 4
         end
     end
-    return TriangulationRule{Tb}(sub_nodes, triangles)
+    return TriangulationRule{Tb}(sub_nodes, triangles, edges)
 end
 
 function TriangulationRule{Tb}(::Type{RefTriangle}, refinement_levels::Int) where {Tb <: Number}
@@ -77,13 +83,17 @@ function TriangulationRule{Tb}(::Type{RefTriangle}, refinement_levels::Int) wher
     dx_horizontal = (r_base - v_base) / n_segments
     sub_nodes = Vector{Vec{2, Float64}}(undef, (n_segments + 2) * (n_segments + 1) ÷ 2)
     fill!(sub_nodes, NaN * zero(Vec{2})) # Temporary to check
+    edges = Vector{Int}(undef, n_segments * 3)
     cnt = 1
     for j in 0:n_segments
         v0 = v_base + dx_left * j
+        edges[3 * n_segments - j] = cnt
         for i in 0:(n_segments - j)
             sub_nodes[cnt] = v0 + i * dx_horizontal
+            j == 1 && (edges[i+1] = cnt)
             cnt += 1
         end
+        edges[n_segments + j] = cnt
     end
 
     n_triangles = (n_segments + 1) * n_segments ÷ 2 + n_segments * (n_segments - 1) ÷ 2
@@ -95,12 +105,12 @@ function TriangulationRule{Tb}(::Type{RefTriangle}, refinement_levels::Int) wher
         i0_bot = length(sub_nodes) - (n_remaining + 2) * (n_remaining + 1) ÷ 2 + 1
         i0_top = i0_bot + (n_segments - j + 2)
         for i in 1:(n_segments - j + 1)
-            triangles[:, num_added + 2 * (i - 1) + 1] = (i0_bot + i - 1, i0_bot + i, i0_top + i - 1)
+            triangles[:, num_added + 2 * (i - 1) + 1] .= (i0_bot + i - 1, i0_bot + i, i0_top + i - 1)
         end
         for i in 1:(n_segments - j)
-            triangles[:, num_added + 2 * (i - 1) + 2] = (i0_bot + i, i0_top + i, i0_top + i - 1)
+            triangles[:, num_added + 2 * (i - 1) + 2] .= (i0_bot + i, i0_top + i, i0_top + i - 1)
         end
         num_added += 2 * (n_segments - j) + 1
     end
-    return TriangulationRule{Tb}(sub_nodes, triangles)
+    return TriangulationRule{Tb}(sub_nodes, triangles, edges)
 end

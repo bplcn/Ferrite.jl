@@ -1,3 +1,5 @@
+using Ferrite
+include("TriangulationRule.jl")
 struct SubTriangulation
     faces::Vector{FaceIndex}
     sdh::SubDofHandler
@@ -17,7 +19,7 @@ function triangulate!(nodes::Vector{<:Vec}, triangles::Vector{Int}, sdh::SubDofH
     return SubTriangulation(faces, sdh, rule, face_triangles)
 end
 
-function _triangulate!(nodes::Vector{<:Vec}, triangles::Vector{Int}, grid::AbstractGrid, ipg::ScalarInterpolation, faces::Vector{FaceIndex}, rule::TriangulationRules)
+function _triangulate!(nodes::Vector{<:Vec}, triangles::Vector{Int}, grid::Ferrite.AbstractGrid, ipg::ScalarInterpolation, faces::Vector{FaceIndex}, rule::TriangulationRules)
     node_offset = length(nodes)
     sizehint!(nodes, node_offset + getnquadpoints(getfacerule(rule, 1)) * length(faces))
     tria_offset = length(triangles)
