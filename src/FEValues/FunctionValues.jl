@@ -36,7 +36,7 @@ typeof_d2Ndξ2(::Type{T}, ::VectorInterpolation{vdim}, ::VectorizedInterpolation
 
 
 """
-    FunctionValues{DiffOrder}(::Type{T}, ip_fun, qr::QuadratureRule, ip_geo::VectorizedInterpolation)
+    FunctionValues{DiffOrder}(::Type{T}, ip_fun, qr::AbstractQuadratureRule, ip_geo::VectorizedInterpolation)
 
 Create a `FunctionValues` object containing the shape values and gradients (up to order `DiffOrder`)
 for both the reference cell (precalculated) and the real cell (updated in `reinit!`).
@@ -61,7 +61,7 @@ struct FunctionValues{DiffOrder, IP, N_t, dNdx_t, dNdξ_t, d2Ndx2_t, d2Ndξ2_t}
         return new{2, typeof(ip), N_t, typeof(dNdx), typeof(dNdξ), typeof(d2Ndx2), typeof(d2Ndξ2)}(ip, Nx, Nξ, dNdx, dNdξ, d2Ndx2, d2Ndξ2)
     end
 end
-function FunctionValues{DiffOrder}(::Type{T}, ip::Interpolation, qr::QuadratureRule, ip_geo::VectorizedInterpolation) where {DiffOrder, T}
+function FunctionValues{DiffOrder}(::Type{T}, ip::Interpolation, qr::AbstractQuadratureRule, ip_geo::VectorizedInterpolation) where {DiffOrder, T}
     n_shape = getnbasefunctions(ip)
     n_qpoints = getnquadpoints(qr)
 

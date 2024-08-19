@@ -43,10 +43,10 @@ end
 struct CellValues{FV, GM, QR, detT} <: AbstractCellValues
     fun_values::FV # FunctionValues
     geo_mapping::GM # GeometryMapping
-    qr::QR         # QuadratureRule
+    qr::QR         # AbstractQuadratureRule
     detJdV::detT   # AbstractVector{<:Number} or Nothing
 end
-function CellValues(::Type{T}, qr::QuadratureRule, ip_fun::Interpolation, ip_geo::VectorizedInterpolation,
+function CellValues(::Type{T}, qr::AbstractQuadratureRule, ip_fun::Interpolation, ip_geo::VectorizedInterpolation,
         ::ValuesUpdateFlags{FunDiffOrder, GeoDiffOrder, DetJdV}) where {T, FunDiffOrder, GeoDiffOrder, DetJdV}
 
     geo_mapping = GeometryMapping{GeoDiffOrder}(T, ip_geo.ip, qr)
@@ -55,11 +55,11 @@ function CellValues(::Type{T}, qr::QuadratureRule, ip_fun::Interpolation, ip_geo
     return CellValues(fun_values, geo_mapping, qr, detJdV)
 end
 
-CellValues(qr::QuadratureRule, ip::Interpolation, args...; kwargs...) = CellValues(Float64, qr, ip, args...; kwargs...)
+CellValues(qr::AbstractQuadratureRule, ip::Interpolation, args...; kwargs...) = CellValues(Float64, qr, ip, args...; kwargs...)
 function CellValues(::Type{T}, qr, ip::Interpolation, ip_geo::ScalarInterpolation; kwargs...) where T
     return CellValues(T, qr, ip, VectorizedInterpolation(ip_geo); kwargs...)
 end
-function CellValues(::Type{T}, qr::QuadratureRule, ip::Interpolation, ip_geo::VectorizedInterpolation = default_geometric_interpolation(ip); kwargs...) where T
+function CellValues(::Type{T}, qr::AbstractQuadratureRule, ip::Interpolation, ip_geo::VectorizedInterpolation = default_geometric_interpolation(ip); kwargs...) where T
     return CellValues(T, qr, ip, ip_geo, ValuesUpdateFlags(ip; kwargs...))
 end
 

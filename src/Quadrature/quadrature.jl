@@ -6,6 +6,8 @@ include("generate_quadrature.jl")
 
 using Base.Cartesian: @nloops, @ntuple, @nexprs
 
+abstract type AbstractQuadratureRule end
+
 ##################
 # QuadratureRule #
 ##################
@@ -49,7 +51,7 @@ julia> getpoints(qr)
  [0.33333333333333, 0.33333333333333]
 ```
 """
-struct QuadratureRule{shape, WeightStorageType, PointStorageType}
+struct QuadratureRule{shape, WeightStorageType, PointStorageType} <: AbstractQuadratureRule
     weights::WeightStorageType  # E.g. Vector{Float64}
     points::PointStorageType    # E.g. Vector{Vec{3, Float64}}
     function QuadratureRule{shape}(weights::AbstractVector{T}, points::AbstractVector{Vec{rdim, T}}) where {rdim, shape <: AbstractRefShape{rdim}, T}

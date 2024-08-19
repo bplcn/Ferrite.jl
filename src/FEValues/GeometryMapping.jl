@@ -53,14 +53,14 @@ struct GeometryMapping{DiffOrder, IP, M_t, dMdξ_t, d2Mdξ2_t}
         return new{2, IP, M_t, dMdξ_t, d2Mdξ2_t}(ip, M, dMdξ, d2Mdξ2)
     end
 end
-function GeometryMapping{0}(::Type{T}, ip::ScalarInterpolation, qr::QuadratureRule) where T
+function GeometryMapping{0}(::Type{T}, ip::ScalarInterpolation, qr::AbstractQuadratureRule) where T
     n_shape = getnbasefunctions(ip)
     n_qpoints = getnquadpoints(qr)
     gm = GeometryMapping(ip, zeros(T, n_shape, n_qpoints), nothing, nothing)
     precompute_values!(gm, getpoints(qr))
     return gm
 end
-function GeometryMapping{1}(::Type{T}, ip::ScalarInterpolation, qr::QuadratureRule) where T
+function GeometryMapping{1}(::Type{T}, ip::ScalarInterpolation, qr::AbstractQuadratureRule) where T
     n_shape = getnbasefunctions(ip)
     n_qpoints = getnquadpoints(qr)
 
@@ -71,7 +71,7 @@ function GeometryMapping{1}(::Type{T}, ip::ScalarInterpolation, qr::QuadratureRu
     precompute_values!(gm, getpoints(qr))
     return gm
 end
-function GeometryMapping{2}(::Type{T}, ip::ScalarInterpolation, qr::QuadratureRule) where T
+function GeometryMapping{2}(::Type{T}, ip::ScalarInterpolation, qr::AbstractQuadratureRule) where T
     n_shape = getnbasefunctions(ip)
     n_qpoints = getnquadpoints(qr)
 
