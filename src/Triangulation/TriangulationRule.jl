@@ -1,9 +1,3 @@
-struct Triangulation{sdim, T, DH}
-    nodes::Vector{NTuple{sdim, T}}
-    cells::Matrix{Int} # (3, ncells) => index in "nodes"
-    dh::DH
-end
-
 # We construct a TriangulationRule of a cell by first refining the cell
 # depending on the order, keeping the shape. If not triangular already, we split
 # into triangles.
